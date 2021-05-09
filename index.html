@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style>
+		html,body, textarea{
+			box-sizing: border-box;
+			height : 100%;
+			width : 100%;
+			padding : 0px;
+			margin : 0px;
+			font-family: monospace;
+		}
+		body{
+			padding : 2em;
+			background-color:#3f3f3f;
+			color: #f0dfaf;
+		}
+		textarea{
+			background-color:#3f3f3f;
+			color: #f0dfaf;
+			padding: 1em;
+			height : 500px;
+			max-width : 500px;
+		}
+		a{
+			color:#7cb8bb;
+		}
+		a:visited{
+			color:#bfbdd0;
+		}
+	</style>
+</head>
+<body>
+	<h1>Monosaccharide</h1>
+	<p>
+		Drag your exported <a href='https://www.motoslave.net/sugarcube/2/'>Sugarcube</a> HTML file on to this page and it will replaced the embedded libraries with linked ones, which will greatly reduce the file size.
+	</p>
+	<div class='right'>
+		<textarea id='content'>Reduced HTML will go here...</textarea>
+	</div>
+
+</body>
+<script type="text/javascript">
+
+	function download(filename, text) {
+		const element = document.createElement('a');
+		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+		element.setAttribute('download', filename);
+		element.style.display = 'none';
+		document.body.appendChild(element);
+		element.click();
+		document.body.removeChild(element);
+	}
+
+	window.addEventListener("dragover",(evt)=>{
+		evt.preventDefault();
+	},false);
+
+	window.addEventListener("drop",(evt)=>{
+		evt.stopPropagation();
+		evt.preventDefault();
+		const files = evt.dataTransfer.files
+		const reader = new FileReader();
+		reader.onload = function(e2) {
+			const name = `${files[0].name.split('.')[0]} - reduced.html`;
+			const result = processFile(e2.target.result);
+			//download(name, result);
+			document.getElementById('content').value = result;
+		}
+
+		reader.readAsText(files[0]);
+	},false);
+
+
+	const addLibTags = (content)=>{
+		const LIBS = `
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.5.14/es5-shim.min.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/es6-shim@0.35.3/es6-shim.min.js"><\/script>
+		`;
+		const index = content.indexOf('<script id="script-libraries" type="text/javascript">');
+		if(index === -1) return content;
+
+		return content.slice(0, index) + LIBS + content.slice(index);
+	};
+
+	const removeEmbedLibs = (content)=>{
+		const start = `/*!
+ * https://github.com/es-shims/es5-shim`;
+		const end = `/*
+ * jQuery throttle / debounce - v1.1 - 3/7/2010`;
+		return content.slice(0, content.indexOf(start)) + content.slice(content.indexOf(end));
+	}
+
+	const processFile = (content)=>{
+		content = addLibTags(content);
+		content = removeEmbedLibs(content);
+		return content;
+	}
+</script>
+</html>
